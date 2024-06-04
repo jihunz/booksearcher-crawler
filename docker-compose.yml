@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  nginx:
+    container_name: nginx
+    ports:
+      - "80:80"
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
+    depends_on:
+      - analysis
+    restart: always
+    environment:
+      - TZ=Asia/Seoul
+
+  analysis:
+    container_name: analysis
+    ports:
+      - "8000:8000"
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    restart: always
+    environment:
+      - TZ=Asia/Seoul
+    volumes:
+      - analysis_log:/app/util/log/logfile
+
+volumes:
+  analysis_log:
