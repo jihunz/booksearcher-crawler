@@ -37,7 +37,7 @@ async def run_get_proxy():
 
 async def run_chk_proxy():
     loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, Proxy_manager.chk_proxy_without_return())
+    await loop.run_in_executor(None, Proxy_manager.chk_proxy())
 
 
 @app.on_event("startup")

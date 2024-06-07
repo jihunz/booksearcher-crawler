@@ -41,16 +41,6 @@ class Proxy_manager:
 
     @classmethod
     def chk_proxy(cls):
-        for i in range(0, len(cls.proxy_result_list)):
-            try:
-                requests.get(cls.target_url, headers=cls.headers, proxies=cls.proxy_result_list[i], timeout=2)
-                return True
-            except Exception as e:
-                print('[PROXY-CHK-FAIL]: ' + str(e))
-                del cls.proxy_result_list[i]
-
-    @classmethod
-    def chk_proxy_without_return(cls):
         while True:
             for i in range(0, len(cls.proxy_result_list)):
                 try:
