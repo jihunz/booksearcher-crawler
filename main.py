@@ -44,7 +44,7 @@ async def run_chk_proxy():
 async def find_available_proxy():
     background_tasks = BackgroundTasks()
     background_tasks.add_task(asyncio.create_task(run_get_proxy()))
-    # background_tasks.add_task(asyncio.create_task(run_chk_proxy()))
+    background_tasks.add_task(asyncio.create_task(run_chk_proxy()))
 
 
 if __name__ == "__main__":

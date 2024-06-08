@@ -16,15 +16,9 @@ class Proxy_manager:
     def get_proxy(cls):
         soup = html_manager.parse_html(cls.url)
         proxy_list = soup.find('table', class_='table table-striped table-bordered').find_all('tr')[1:]
-        proxy_result_list_len = len(cls.proxy_result_list)
         max_size = 10
 
-        while True:
-            print('[PROXY_RESULT_LIST]: ', proxy_result_list_len, '/', max_size)
-            if proxy_result_list_len >= max_size:
-                break
-
-            print('[PROXY]: finding proxy')
+        while len(cls.proxy_result_list) <= max_size:
             try:
                 rand_num = random.randint(0, (len(proxy_list) - 70))
                 tds = proxy_list[rand_num].find_all('td')
@@ -34,10 +28,12 @@ class Proxy_manager:
                     'https': 'http://' + proxy_url,
                 }
                 requests.get(cls.target_url, headers=cls.headers, proxies=proxy, timeout=1)
-                print('[PROXY-SUCCESS]: ' + proxy_url)
                 cls.proxy_result_list.append(proxy)
+                print('[PROXY-MANAGER] Success: ' + proxy_url)
+                print('[PROXY-MANAGER] List size: ', len(cls.proxy_result_list), '/', max_size)
             except Exception as e:
-                print('[PROXY-FAIL]: ' + str(e))
+                pass
+                # print('[PROXY-MANAGER] Fail: ' + str(e))
 
     @classmethod
     def chk_proxy(cls):
@@ -45,7 +41,6 @@ class Proxy_manager:
             for i in range(0, len(cls.proxy_result_list)):
                 try:
                     requests.get(cls.target_url, headers=cls.headers, proxies=cls.proxy_result_list[i], timeout=5)
-                    print('[PROXY-CHK-SUCCESS]')
                 except Exception as e:
-                    print('[PROXY-CHK-FAIL]: ' + str(e))
+                    print('[PROXY-MANAGER] Chk fail -> delete: ', cls.proxy_result_list[i])
                     del cls.proxy_result_list[i]
