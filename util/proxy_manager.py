@@ -8,7 +8,7 @@ from user_agent import generate_user_agent
 
 
 class Proxy_manager:
-    proxy_result_list = []
+    # proxy_result_list = []
     url = get_config().PROXY_SOURCE_URL
     target_url = get_config().TARGET_URL
     headers = {'User-Agent': generate_user_agent(os='win', device_type='desktop')}
@@ -32,7 +32,7 @@ class Proxy_manager:
                     'https': 'http://' + proxy_url,
                 }
                 requests.get(cls.target_url, headers=cls.headers, proxies=proxy, timeout=2)
-                cls.proxy_result_list.append(proxy)
+                # cls.proxy_result_list.append(proxy)
                 print('[PROXY-MANAGER] Success: ' + proxy_url)
                 # print('[PROXY-MANAGER] List size: ', len(cls.proxy_result_list), '/', max_size)
                 proxy_not_founded = False
