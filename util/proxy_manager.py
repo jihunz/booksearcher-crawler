@@ -18,7 +18,6 @@ class Proxy_manager:
         while proxy_not_founded:
             try:
                 td = proxy_list[proxy_num].find_all('td')
-                print(proxy_num)
                 proxy_url = td[0].text + ':' + td[1].text
                 proxy = {
                     'http': 'http://' + proxy_url,

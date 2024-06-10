@@ -2,50 +2,34 @@ import time
 import traceback
 
 from loguru import logger
+from selenium.webdriver.support.wait import WebDriverWait
 
 from config import get_config
 from .webdriver_util import Webdriver_util as wdm
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 
 
 class Crawler_service:
 
     @classmethod
-    async def crawl(cls, term: str):
+    async def exec_crawl(cls, term: str):
+        # TODO: 검색 결과 없을 때 크롤링 조기 리턴
         try:
-            result_list = []
+            result = []
             driver = wdm.create_driver()
-            try:
-                driver.get(get_config().get_search_url(term))
-                page = 1
-                while True:
-                    # a = driver.find_elements(By.CSS_SELECTOR, '.paging > span a')[-1].text
-                    # print(a)
-                    print('crawl start!')
+            driver.get(get_config().get_search_url(term))
 
-                    a = driver.find_element(By.CSS_SELECTOR, '.paging').text
-                    print(a)
+            await cls.crawl_pagination(driver, result)
 
-                    # last_page = int(a)
-                    await cls.crawl_book_chk_info(driver, result_list)
-
-                    if page == 5 and driver.find_element(By.CSS_SELECTOR, 'img[title="다음"'):
-                        driver.find_element(By.CSS_SELECTOR, 'a[title="다음"]').click()
-                    else:
-                        next_page = driver.find_element(By.LINK_TEXT, str(page + 1))
-                        next_page.click()
-                    page += 1
-
-                return result_list
-            finally:
-                time.sleep(3)
-                driver.quit()
+            driver.quit()
+            return result
         except Exception as e:
             logger.error(traceback.format_exc())
             raise e
 
     @classmethod
-    async def crawl_book_chk_info(cls, driver, result_list):
+    async def crawl_book_chk_info(cls, driver, result):
         li_list = driver.find_element(By.CLASS_NAME, 'resultList').find_elements(By.TAG_NAME, "li")
         for item in li_list:
             dd_list = item.find_elements(By.CSS_SELECTOR, "dl dd")
@@ -55,9 +39,40 @@ class Crawler_service:
             library = a.text
             check_availability = a.find_element(By.CSS_SELECTOR, "span").text
 
-            result_list.append({
+            if '대출불가' in check_availability:
+                continue
+
+            result.append({
                 'title': title,
                 'call_num': call_num,
                 'library': library.replace(check_availability, ''),
                 'check_availability': check_availability
             })
+
+    @classmethod
+    async def crawl_pagination(cls, driver, result, idx=0):
+        await cls.crawl_book_chk_info(driver, result)
+
+        a = driver.find_elements(By.CSS_SELECTOR, '.paging span a')
+        if len(a) == 0:
+            return
+
+        # for i in range(0, len(a)):
+        driver.get(a[idx].get_attribute('href'))
+        await cls.crawl_book_chk_info(driver, result)
+
+        # next = driver.find_elements(By.XPATH, '//*[@id="divContent"]/div/div[3]/div[2]/form/fieldset/div/a[1]')
+
+        wait = WebDriverWait(driver, 10)
+        next_attr = (By.CSS_SELECTOR, '.paging > a[title="다음"]')
+        wait.until(EC.visibility_of_element_located(
+            next_attr))
+        next = driver.find_elemens(next_attr)
+
+        if idx == len(a) - 1 and len(next) > 0:
+            print('다음 페이지 크롤링')
+            driver.get(next[0].get_attribute('href'))
+            await cls.crawl_pagination(driver, result)
+
+            # driver.get(next[0].get_attribute('href'))
+            # await cls.crawl_book_chk_info(driver, result)
