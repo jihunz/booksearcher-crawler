@@ -3,7 +3,7 @@ import traceback
 
 from fastapi import Depends
 from loguru import logger
-from .webdriver_creator import Webdriver_creator as wdm
+from .webdriver_util import Webdriver_util as wdm
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -15,7 +15,7 @@ class Crawler_service:
     async def crawl(cls, term: str):
         try:
             result_list = []
-            driver = wdm.get_driver()
+            driver = wdm.create_driver()
             try:
                 driver.get("https://www.u-library.kr/")
                 wait = WebDriverWait(driver, 20)

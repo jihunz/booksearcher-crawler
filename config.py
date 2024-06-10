@@ -6,6 +6,8 @@ from pydantic_settings import BaseSettings
 class Config(BaseSettings):
     APP_HOST: str = '0.0.0.0'
     APP_PORT: int = 8000
+    TARGET_URL: str = 'https://www.u-library.kr/'
+    PROXY_SOURCE_URL: str = 'https://www.sslproxies.org'
 
 
 class DevelopmentConfig(Config):

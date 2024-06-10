@@ -31,20 +31,22 @@ def create_app() -> FastAPI:
 app = create_app()
 
 
-async def run_get_proxy():
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, Proxy_manager.get_proxy)
+# 사용 가능한 프록시 서버 발굴
+# async def run_get_proxy():
+#     loop = asyncio.get_event_loop()
+#     await loop.run_in_executor(None, Proxy_manager.get_proxy)
 
-async def run_chk_proxy():
-    loop = asyncio.get_event_loop()
-    await loop.run_in_executor(None, Proxy_manager.chk_proxy())
+# 발굴된 프록시 서버 유효성 확인
+# async def run_chk_proxy():
+#     loop = asyncio.get_event_loop()
+#     await loop.run_in_executor(None, Proxy_manager.chk_proxy())
 
 
-@app.on_event("startup")
-async def find_available_proxy():
-    background_tasks = BackgroundTasks()
-    background_tasks.add_task(asyncio.create_task(run_get_proxy()))
-    background_tasks.add_task(asyncio.create_task(run_chk_proxy()))
+# @app.on_event("startup")
+# async def find_available_proxy():
+#     background_tasks = BackgroundTasks()
+#     background_tasks.add_task(asyncio.create_task(run_get_proxy()))
+    # background_tasks.add_task(asyncio.create_task(run_chk_proxy()))
 
 
 if __name__ == "__main__":
