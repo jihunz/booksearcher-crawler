@@ -1,14 +1,11 @@
 import time
 import traceback
 
-from fastapi import Depends
 from loguru import logger
 
 from config import get_config
 from .webdriver_util import Webdriver_util as wdm
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 
 class Crawler_service:
@@ -19,37 +16,25 @@ class Crawler_service:
             result_list = []
             driver = wdm.create_driver()
             try:
-                driver.get(get_config().TARGET_URL)
-                wait = WebDriverWait(driver, 20)
-                wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="search"]')))
-
-                search_input = driver.find_element(By.XPATH, '//*[@id="search"]')
-                search_input.send_keys(term)
-                search_input.submit()
-
-                per_page = driver.find_element(By.XPATH, '//*[@id="searchOption"]/fieldset/a[3]/span[1]')
-                driver.execute_script("arguments[0].innerText = '100';", per_page)
-                driver.find_element(By.XPATH, '//*[@id="searchOption"]/fieldset/input[4]').submit()
-
+                driver.get(get_config().get_search_url(term))
                 page = 1
-                # while True:
-                #     # a = driver.find_elements(By.CSS_SELECTOR, '.paging > span a')[-1].text
-                #     # print(a)
-                #     print('crawl start!')
-                #
-                #     a = driver.find_element(By.CSS_SELECTOR, '.paging').text
-                #     print(a)
-                #
-                #
-                #     # last_page = int(a)
-                #     await cls.crawl_book_chk_info(driver, result_list)
-                #
-                #     if page == 5 and driver.find_element(By.CSS_SELECTOR, 'img[title="다음"'):
-                #         driver.find_element(By.CSS_SELECTOR, 'a[title="다음"]').click()
-                #     else:
-                #         next_page = driver.find_element(By.LINK_TEXT, str(page + 1))
-                #         next_page.click()
-                #     page += 1
+                while True:
+                    # a = driver.find_elements(By.CSS_SELECTOR, '.paging > span a')[-1].text
+                    # print(a)
+                    print('crawl start!')
+
+                    a = driver.find_element(By.CSS_SELECTOR, '.paging').text
+                    print(a)
+
+                    # last_page = int(a)
+                    await cls.crawl_book_chk_info(driver, result_list)
+
+                    if page == 5 and driver.find_element(By.CSS_SELECTOR, 'img[title="다음"'):
+                        driver.find_element(By.CSS_SELECTOR, 'a[title="다음"]').click()
+                    else:
+                        next_page = driver.find_element(By.LINK_TEXT, str(page + 1))
+                        next_page.click()
+                    page += 1
 
                 return result_list
             finally:

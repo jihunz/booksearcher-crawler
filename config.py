@@ -9,6 +9,9 @@ class Config(BaseSettings):
     TARGET_URL: str = 'https://www.u-library.kr/'
     PROXY_SOURCE_URL: str = 'https://www.sslproxies.org'
 
+    def get_search_url(self, term: str) -> str:
+        return f"https://www.u-library.kr/search/tot/result?st=EXCT&si=TOTAL&q={term}&folder_id=null"
+
 
 class DevelopmentConfig(Config):
     APP_PORT: int = 2024
