@@ -3,6 +3,8 @@ import traceback
 
 from fastapi import Depends
 from loguru import logger
+
+from config import get_config
 from .webdriver_util import Webdriver_util as wdm
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -17,7 +19,7 @@ class Crawler_service:
             result_list = []
             driver = wdm.create_driver()
             try:
-                driver.get("https://www.u-library.kr/")
+                driver.get(get_config().TARGET_URL)
                 wait = WebDriverWait(driver, 20)
                 wait.until(EC.presence_of_element_located((By.XPATH, '//*[@id="search"]')))
 

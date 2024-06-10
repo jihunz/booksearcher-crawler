@@ -1,6 +1,7 @@
 import random
 import time
 
+from config import get_config
 from util import html_manager
 import requests
 from user_agent import generate_user_agent
@@ -8,8 +9,8 @@ from user_agent import generate_user_agent
 
 class Proxy_manager:
     proxy_result_list = []
-    url = 'https://www.sslproxies.org'
-    target_url = 'https://www.u-library.kr/'
+    url = get_config().PROXY_SOURCE_URL
+    target_url = get_config().TARGET_URL
     headers = {'User-Agent': generate_user_agent(os='win', device_type='desktop')}
 
     @classmethod
