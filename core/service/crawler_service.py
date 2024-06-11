@@ -11,6 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class Crawler_service:
+    crawled_url_dic = {}
 
     @classmethod
     async def exec_crawl(cls, term: str):
@@ -20,7 +21,7 @@ class Crawler_service:
             driver = wdm.create_driver()
             driver.get(get_config().get_search_url(term))
 
-            await cls.crawl_pagination(driver, result)
+            await cls.crawl2(driver, result, 0)
 
             driver.quit()
             return result
@@ -50,29 +51,54 @@ class Crawler_service:
             })
 
     @classmethod
-    async def crawl_pagination(cls, driver, result, idx=0):
+    async def crawl(cls, driver, result, idx=0):
         await cls.crawl_book_chk_info(driver, result)
 
         a = driver.find_elements(By.CSS_SELECTOR, '.paging span a')
         if len(a) == 0:
             return
 
-        # for i in range(0, len(a)):
         driver.get(a[idx].get_attribute('href'))
         await cls.crawl_book_chk_info(driver, result)
 
-        # next = driver.find_elements(By.XPATH, '//*[@id="divContent"]/div/div[3]/div[2]/form/fieldset/div/a[1]')
+        if idx == len(a) - 1:
+            wait = WebDriverWait(driver, 10)
+            wait.until(EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, '.paging > a[title="다음"]')))
+            next = driver.find_elements(By.CSS_SELECTOR, '.paging > a[title="다음"]')
 
-        wait = WebDriverWait(driver, 10)
-        next_attr = (By.CSS_SELECTOR, '.paging > a[title="다음"]')
-        wait.until(EC.visibility_of_element_located(
-            next_attr))
-        next = driver.find_elemens(next_attr)
+            if len(next) == 0:
+                print('다음 페이지 크롤링')
+                driver.get(next[0].get_attribute('href'))
+                await cls.crawl(driver, result, idx + 1)
 
-        if idx == len(a) - 1 and len(next) > 0:
-            print('다음 페이지 크롤링')
-            driver.get(next[0].get_attribute('href'))
-            await cls.crawl_pagination(driver, result)
+    @classmethod
+    async def crawl2(cls, driver, result, idx):
+        # 페이지네이션을 위해 마지막 페이지 탐색
+        final_page = None
+        a = driver.find_elements(By.CSS_SELECTOR, '.paging span a')
+        for i in range(len(a)):
+            if i == len(a) - 1:
+                final_page = int(a[i].text)
 
-            # driver.get(next[0].get_attribute('href'))
-            # await cls.crawl_book_chk_info(driver, result)
+        # 다음 페이지 크롤링 -> 재귀 -> 인덱스 증가? 새로운 페이지 선택 -> get -> 크롤링
+        await cls.crawl_book_chk_info(driver, result)
+
+        if len(a) == 0:
+            return
+
+        print(final_page) # TODO: 현재 페이지= span / a=final_page라면 현재 페이지=5일때 a=4
+        if idx < final_page:
+            next_page = idx + 1
+            driver.get(a[next_page].get_attribute('href'))
+            await cls.crawl2(driver, result, next_page)
+        elif idx == final_page:
+            wait = WebDriverWait(driver, 10)
+            wait.until(EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, '.paging > a[title="다음"]')))
+            next = driver.find_elements(By.CSS_SELECTOR, '.paging > a[title="다음"]')
+
+            if len(next) > 0:
+                print('다음 페이지 크롤링')
+                driver.get(next[0].get_attribute('href'))
+                await cls.crawl2(driver, result, idx + 1)
