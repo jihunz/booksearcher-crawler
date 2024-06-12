@@ -16,7 +16,7 @@ class Crawler_service:
     @classmethod
     async def exec_crawl(cls, term: str):
         try:
-            result = []
+            result = {}
             url = get_config().get_search_url(term)
             # proxy = Proxy_manager.get_proxy()
             await cls.crawl_pages(url, result)
@@ -35,16 +35,19 @@ class Crawler_service:
             title = dd_list[3].find('a').get_text()
             call_num = dd_list[6].get_text()
             a = dd_list[-1].find('a')
-            library = a.get_text()
             check_availability = a.find('span').get_text()
+            library = a.get_text().replace(check_availability, '')
 
             if '대출가능' not in check_availability and '대출중' not in check_availability:
                 continue
 
-            result.append({
+            if library not in result:
+                result[library] = []
+
+            result[library].append({
                 'title': title,
                 'call_num': call_num,
-                'library': library.replace(check_availability, ''),
+                'library': library,
                 'check_availability': check_availability
             })
 
