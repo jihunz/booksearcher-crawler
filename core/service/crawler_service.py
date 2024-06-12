@@ -5,6 +5,8 @@ from loguru import logger
 from selenium.webdriver.support.wait import WebDriverWait
 
 from config import get_config
+from util import html_manager
+from util.proxy_manager import Proxy_manager
 from .webdriver_util import Webdriver_util as wdm
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -18,12 +20,14 @@ class Crawler_service:
         # TODO: 검색 결과 없을 때 크롤링 조기 리턴
         try:
             result = []
-            driver = wdm.create_driver()
-            driver.get(get_config().get_search_url(term))
+            url = get_config().get_search_url(term)
+            # driver = wdm.create_driver()
+            # driver.get(url)
+            # await cls.crawl2(driver, result, 0)
+            # proxy = Proxy_manager.get_proxy()
+            await cls.crawl3(url, result)
 
-            await cls.crawl2(driver, result, 0)
-
-            driver.quit()
+            # driver.quit()
             return result
         except Exception as e:
             logger.error(traceback.format_exc())
@@ -77,9 +81,12 @@ class Crawler_service:
         # 페이지네이션을 위해 마지막 페이지 탐색
         final_page = None
         a = driver.find_elements(By.CSS_SELECTOR, '.paging span a')
+        last_a = None
         for i in range(len(a)):
             if i == len(a) - 1:
-                final_page = int(a[i].text)
+                last_a = int(a[i].text)
+        span = driver.find_elements(By.CSS_SELECTOR, '.paging span span')[0]
+        print(span)
 
         # 다음 페이지 크롤링 -> 재귀 -> 인덱스 증가? 새로운 페이지 선택 -> get -> 크롤링
         await cls.crawl_book_chk_info(driver, result)
@@ -87,11 +94,10 @@ class Crawler_service:
         if len(a) == 0:
             return
 
-        print(final_page) # TODO: 현재 페이지= span / a=final_page라면 현재 페이지=5일때 a=4
+        print(final_page)  # TODO: 현재 페이지= span, final_page=a / 현재 페이지=5일때 a=4
         if idx < final_page:
-            next_page = idx + 1
-            driver.get(a[next_page].get_attribute('href'))
-            await cls.crawl2(driver, result, next_page)
+            driver.get(a[idx].get_attribute('href'))
+            await cls.crawl2(driver, result, idx + 1)
         elif idx == final_page:
             wait = WebDriverWait(driver, 10)
             wait.until(EC.visibility_of_element_located(
@@ -102,3 +108,34 @@ class Crawler_service:
                 print('다음 페이지 크롤링')
                 driver.get(next[0].get_attribute('href'))
                 await cls.crawl2(driver, result, idx + 1)
+
+    @classmethod
+    async def crawl3(cls, url, result):
+        base_url = 'https://www.u-library.kr/search/tot/result'
+        # soup = html_manager.parse_html_proxy(url, proxy)
+        soup = html_manager.parse_html(url)
+
+        if soup.find('div', id='divNoResult'):
+            return
+
+        a = soup.select('.paging span a')
+        last_a = int(a[-1].get_text()) if a else 1
+        curr_page = int(soup.select('.paging span span')[0].get_text())
+        last_page = last_a if curr_page < last_a else curr_page
+
+        print(curr_page)
+
+        # TODO: 크롤링
+
+        if last_page == 1:
+            return
+
+        if curr_page < last_page:
+            next_page_url = base_url + soup.find('a', text=str(curr_page + 1)).get('href')
+            # TODO: 크롤링
+            await cls.crawl3(next_page_url, result)
+        elif curr_page == last_page:
+            next_grp_btn = soup.select('.paging > a[title="다음"]')
+            if len(next_grp_btn) > 0:
+                next_grp_url = base_url + next_grp_btn[0].get('href')
+                await cls.crawl3(next_grp_url, result)
