@@ -1,21 +1,19 @@
-version: '3.8'
-
 services:
   nginx:
     container_name: nginx
     ports:
-      - "80:80"
+      - "2024:80"
     build:
       dockerfile: Dockerfile
       context: ./nginx
     depends_on:
-      - analysis
+      - booksearcher-crawler
     restart: always
     environment:
       - TZ=Asia/Seoul
 
-  analysis:
-    container_name: analysis
+  booksearcher-crawler:
+    container_name: booksearcher-crawler
     ports:
       - "8000:8000"
     build:
@@ -25,7 +23,7 @@ services:
     environment:
       - TZ=Asia/Seoul
     volumes:
-      - analysis_log:/app/util/log/logfile
+      - booksearcher-crawler:/app/util/log/logfile
 
 volumes:
-  analysis_log:
+  booksearcher-crawler:

@@ -13,8 +13,8 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock ./
 RUN touch README.md
 
-#코드 복사 전 의존성 미리 설치, 캐싱
-RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --without dev --no-root
+# 코드 복사 전 의존성 미리 설치, 캐싱
+RUN --mount=type=cache,target=$POETRY_CACHE_DIR poetry install --no-root
 
 FROM python:3.12-slim-bullseye as runtime
 
@@ -23,10 +23,10 @@ ENV VIRTUAL_ENV=/app/.venv \
 
 # builder에서 구성한 가상환경(의존성 설치됨)과 코드만 복사 -> 수정 빈도 순으로 복사 순서 내림차순 정렬
 WORKDIR /app
-COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+COPY --from=builder /app/.venv /app/.venv
 COPY config.py main.py ./
 COPY util ./util
-COPY analysis ./analysis
+COPY core ./core
 
 # poetry가 아닌 uvicorn으로 앱 실행
-ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0" ]
+ENTRYPOINT ["uvicorn", "main:app"]
