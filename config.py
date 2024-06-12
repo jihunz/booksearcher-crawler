@@ -10,7 +10,8 @@ class Config(BaseSettings):
     PROXY_SOURCE_URL: str = 'https://www.sslproxies.org'
 
     def get_search_url(self, term: str) -> str:
-        return f"https://www.u-library.kr/search/tot/result?st=EXCT&si=TOTAL&q={term}&folder_id=null"
+        size = 100
+        return f"https://www.u-library.kr/search/tot/result?st=EXCT&si=TOTAL&q={term}&folder_id=null&msc={size}"
 
 
 class DevelopmentConfig(Config):

@@ -13,38 +13,32 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class Crawler_service:
-    crawled_url_dic = {}
-
     @classmethod
     async def exec_crawl(cls, term: str):
-        # TODO: 검색 결과 없을 때 크롤링 조기 리턴
         try:
             result = []
             url = get_config().get_search_url(term)
-            # driver = wdm.create_driver()
-            # driver.get(url)
-            # await cls.crawl2(driver, result, 0)
             # proxy = Proxy_manager.get_proxy()
-            await cls.crawl(url, result)
+            await cls.crawl_pages(url, result)
 
-            # driver.quit()
             return result
         except Exception as e:
             logger.error(traceback.format_exc())
             raise e
 
     @classmethod
-    async def crawl_book_chk_info(cls, driver, result):
-        li_list = driver.find_element(By.CLASS_NAME, 'resultList').find_elements(By.TAG_NAME, "li")
-        for item in li_list:
-            dd_list = item.find_elements(By.CSS_SELECTOR, "dl dd")
-            title = dd_list[3].find_element(By.TAG_NAME, "a").text
-            call_num = dd_list[6].text
-            a = dd_list[-1].find_element(By.CSS_SELECTOR, "a")
-            library = a.text
-            check_availability = a.find_element(By.CSS_SELECTOR, "span").text
+    async def crawl_book(cls, soup, result):
+        li_list = soup.select('.resultList li')
 
-            if '대출불가' in check_availability:
+        for item in li_list:
+            dd_list = item.select("dl dd")
+            title = dd_list[3].find('a').get_text()
+            call_num = dd_list[6].get_text()
+            a = dd_list[-1].find('a')
+            library = a.get_text()
+            check_availability = a.find('span').get_text()
+
+            if '대출가능' not in check_availability and '대출중' not in check_availability:
                 continue
 
             result.append({
@@ -55,7 +49,7 @@ class Crawler_service:
             })
 
     @classmethod
-    async def crawl(cls, url, result):
+    async def crawl_pages(cls, url, result):
         base_url = 'https://www.u-library.kr/search/tot/result'
         # soup = html_manager.parse_html_proxy(url, proxy)
         soup = html_manager.parse_html(url)
@@ -68,19 +62,19 @@ class Crawler_service:
         curr_page = int(soup.select('.paging span span')[0].get_text())
         last_page = last_a if curr_page < last_a else curr_page
 
-        print(curr_page)
+        print(f'[CRAWLER-PAGE-{curr_page}]: {url}')
 
-        # TODO: 크롤링
+        await cls.crawl_book(soup, result)
 
         if last_page == 1:
             return
 
         if curr_page < last_page:
             next_page_url = base_url + soup.find('a', text=str(curr_page + 1)).get('href')
-            # TODO: 크롤링
-            await cls.crawl(next_page_url, result)
+            await cls.crawl_pages(next_page_url, result)
         elif curr_page == last_page:
             next_grp_btn = soup.select('.paging > a[title="다음"]')
             if len(next_grp_btn) > 0:
                 next_grp_url = base_url + next_grp_btn[0].get('href')
-                await cls.crawl(next_grp_url, result)
+                print('[CRAWLER-NEXT GROUP]')
+                await cls.crawl_pages(next_grp_url, result)
