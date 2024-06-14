@@ -12,8 +12,7 @@ router = APIRouter(prefix='/api/crawler', tags=['crawler_router'])
 @router.get("", tags=['crawler_router'])
 async def crawl(term: str = Query):
     try:
-        result = await service.exec_crawl(term)
-        return JSONResponse(result)
+        return JSONResponse(await service.exec_crawl(term))
     except Exception as e:
         logger.error(traceback.format_exc())
         return

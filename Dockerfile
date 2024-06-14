@@ -29,4 +29,4 @@ COPY util ./util
 COPY core ./core
 
 # poetry가 아닌 uvicorn으로 앱 실행
-ENTRYPOINT ["uvicorn", "main:app"]
+ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
