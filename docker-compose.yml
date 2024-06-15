@@ -1,4 +1,16 @@
 services:
+  nginx:
+    container_name: nginx
+    ports:
+      - "2024:80"
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
+    depends_on:
+      - crawler
+    restart: always
+    environment:
+      - TZ=Asia/Seoul
   crawler:
     container_name: crawler
     ports:

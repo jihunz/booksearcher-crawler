@@ -33,12 +33,12 @@ class Crawler_service:
         for item in li_list:
             dd_list = item.select("dl dd")
             title = dd_list[3].find('a').get_text()
-            call_num = dd_list[6].get_text()
+            code = dd_list[6].get_text()
             a = dd_list[-1].find('a')
-            check_availability = a.find('span').get_text()
-            library = a.get_text().replace(check_availability, '')
+            status = a.find('span').get_text()
+            library = a.get_text().replace(status, '')
 
-            if '대출가능' not in check_availability and '대출중' not in check_availability:
+            if '대출가능' not in status and '대출중' not in status:
                 continue
 
             if library not in result:
@@ -46,9 +46,9 @@ class Crawler_service:
 
             result[library].append({
                 'title': title,
-                'call_num': call_num,
+                'code': code,
                 'library': library,
-                'check_availability': check_availability
+                'status': status
             })
 
     @classmethod
